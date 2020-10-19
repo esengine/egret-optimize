@@ -9,6 +9,7 @@ module optimize {
         }
 
         private async onAddToStage(evt: egret.Event) {
+            egret.ImageLoader.crossOrigin = "anonymous";
             await this.loadResource();
             this.initialize();
         }
