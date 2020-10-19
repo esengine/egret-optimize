@@ -108,6 +108,46 @@ let val = list.tryGetValue(0);
 
 
 
+#### ObjectPool
+
+对象池，用于快速取出和存储对象并检测当前创建和使用和循环的情况。可提高在大对象中频繁删除和创建的性能。
+
+##### 性能测试
+
+**cpu** i5-7500 3.40Hz
+
+|                        | 加载时长                |
+| ---------------------- | ----------------------- |
+| 预加载（100W数据测试） | 53.469 ms [preallocate] |
+| 将数据放回列表         | 0.114 ms [recycle]      |
+| 从对象池取数据使用     | 0.049 ms [use]          |
+
+#### 使用示例
+
+```typescript
+// 初始化一个存储number的对象池
+let objectPoolTest = new optimize.ObjectPool<number>();
+// 对名为num对象池预加载数据
+objectPoolTest.preallocate("num", 1000000, ()=>{
+    return Math.random();
+});
+// 从num对象池中取一个值使用
+let result = objectPoolTest.use("num", ()=>{
+    // 当对象池为空时则会调用这里返回的值
+    return Math.random();
+});
+// 将取出的数据放回名为num对象池
+objectPoolTest.recycle(result, "num");
+// 获取自上次创建以来创建的对象的数量
+let createNum = objectPoolTest.getNumberOfObjectsCreatedSinceLastTime();
+// 获取上次重用后的对象数量
+let reusedNum = objectPoolTest.getNumberOfObjectsReusedSinceLastTime();
+// 获取上次回收的物品的数量
+let recycledNum = objectPoolTest.getNumberOfObjectsRecycledSinceLastTime();
+```
+
+> 使用`recycle`前需要先调用preallocate或use保证数据初始化后才可以使用
+
 ### webpack 端口如何更改
 
 scripts/plugins/webpack-plugin.ts 文件中更改 WebpackDevServerPlugin 中参数 port。 当前为 `3001`
